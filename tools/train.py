@@ -134,11 +134,7 @@ def main(opt, config_path: str):
     logger.info(f'--------------- START TRAINING ---------------')
     for e in range(opt.epoch):
         for metric in center_metrics:
-            center_metrics[metric].reset() 
-            width_metrics[metric].reset() 
-            iou_metrics[metric].reset() 
             refine_frame_metrics[metric].reset() 
-            # refine_frame_metrics2[metric].reset()
             
         for loss in loss_manager:
             loss_manager[loss].reset()
@@ -177,28 +173,9 @@ def main(opt, config_path: str):
             frame_refine_preds = output['pred_frames_refine']
             B, L, C = frame_preds.shape
 
-            # # Evaluate constrained width prediction
-            out_width = output['pred_width'].detach().cpu().numpy()
-            width_boxes = box_ops.box_width_to_xy(out_width, orig_target_sizes)
-            width_frame_preds = box_ops.convert_to_frame_pred(width_boxes, orig_target_sizes)
-            for metric in width_metrics:
-                for b_id in range(B):
-                    vid_gts = frame_labels[b_id]
-                    vid_preds = width_frame_preds[b_id].to(vid_gts.device)
-                    width_metrics[metric].update(vid_preds, vid_gts, is_prob=False)
-            
-            # Evaluate frame-level classification
-            for metric in center_metrics:
-                for b_id in range(B):
-                    vid_len = int(orig_target_sizes[b_id])
-                    vid_preds = frame_preds[b_id][:int(orig_target_sizes[b_id])]
-                    vid_gts = frame_labels[b_id]
-                    center_metrics[metric].update(vid_preds, vid_gts, is_prob=True)
-
             # Evaluate Refine Frame classification
-            for metric in center_metrics:
+            for metric in refine_frame_metrics:
                 for b_id in range(B):
-                    vid_len = int(orig_target_sizes[b_id])
                     vid_preds = frame_refine_preds[b_id][:int(orig_target_sizes[b_id])]
                     vid_gts = frame_labels[b_id]
                     refine_frame_metrics[metric].update(vid_preds, vid_gts, is_prob=True)
@@ -208,8 +185,6 @@ def main(opt, config_path: str):
         logger.info(print_str)
         print_metrics_frames(
             metric_dict={
-                'Frame': center_metrics, 
-                'Width': width_metrics, 
                 'Refine': refine_frame_metrics, 
             }, 
             n_classes = opt.num_classes, 
@@ -223,10 +198,7 @@ def main(opt, config_path: str):
         # -------------------- VAL --------------------
         model.eval()
         criterion.training=False
-        for metric in center_metrics:
-            center_metrics[metric].reset() 
-            width_metrics[metric].reset() 
-            iou_metrics[metric].reset() 
+        for metric in refine_frame_metrics:
             refine_frame_metrics[metric].reset() 
 
         for loss in loss_manager:
@@ -247,31 +219,12 @@ def main(opt, config_path: str):
 
             frame_labels = [sample['frame_labels'] for sample in dt['video_target']]
             frame_preds = output['pred_frames']
-
             frame_refine_preds = output['pred_frames_refine']
             
             B, L, C = frame_preds.shape
-            
-            # Evaluate stage-area width prediction
-            out_width = output['pred_width'].detach().cpu().numpy()
-            width_boxes = box_ops.box_width_to_xy(out_width, orig_target_sizes)
-            width_frame_preds = box_ops.convert_to_frame_pred(width_boxes, orig_target_sizes)
-            for metric in width_metrics:
-                for b_id in range(B):
-                    vid_gts = frame_labels[b_id]
-                    vid_preds = width_frame_preds[b_id].to(vid_gts.device)
-                    width_metrics[metric].update(vid_preds, vid_gts, is_prob=False)
-
-            # Evaluate frame-level classification
-            for metric in center_metrics:
-                for b_id in range(B):
-                    vid_preds = frame_preds[b_id][:int(orig_target_sizes[b_id])]
-                    vid_gts = frame_labels[b_id]
-                    center_metrics[metric].update(vid_preds, vid_gts, is_prob=True)
-    
 
             # Evaluate Refine Frame classification
-            for metric in center_metrics:
+            for metric in refine_frame_metrics:
                 for b_id in range(B):
                     vid_preds = frame_refine_preds[b_id][:int(orig_target_sizes[b_id])]
                     vid_gts = frame_labels[b_id]
@@ -281,8 +234,6 @@ def main(opt, config_path: str):
         logger.info(print_str)
         print_metrics_frames(
             metric_dict={
-                'Frame': center_metrics, 
-                'Width': width_metrics, 
                 'Refine': refine_frame_metrics, 
             }, 
             n_classes = opt.num_classes,

@@ -11,7 +11,7 @@ The timing of cell divisions in early embryos during In-Vitro Fertilization (IVF
 - Use scripts: `scripts/train.sh` and `scripts/test.sh`. Config file is in `cfgs` folder
 
 ## Citation
-Please consider citing this project in your publications if it helps your research
+Please consider citing this project in your publications if it helps your research.
 ```
 ```
 The code is used for academic purpose only.
