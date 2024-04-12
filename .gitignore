@@ -1,6 +1,7 @@
 dataset/
 results/
 embryo_former/pdvc*
+data/embryo
 
 
 # Byte-compiled / optimized / DLL files

@@ -5,7 +5,7 @@ The timing of cell divisions in early embryos during In-Vitro Fertilization (IVF
 - we use PyTorch 1.12.1 and cuda 11.3 (higher versions may be available)
 
 ## 2. Dataset preparation
-- Extract video features and use [create_annot.sh](data/embryo/create_annot.sh) to create input annotations for the training step (json format)
+- Our proposed Human Embryos dataset can be downloaded at: [google_drive](https://drive.google.com/drive/folders/1LpP_6RCoDHO3WBl1ZI1wVEHUvqgUwJ6z?usp=sharing)
 
 ## 3. Training and Validation
 - Use scripts: `scripts/train.sh` and `scripts/test.sh`. Config file is in `cfgs` folder
